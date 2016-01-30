@@ -115,8 +115,11 @@ func (adapter *FluentdAdapter) reconnect() error {
 	for {
 		conn, err := adapter.transport.Dial(adapter.route.Address, adapter.route.Options)
 		if err != nil {
+			time.Sleep(10 * time.Second)
 			continue
 		}
+
+		log.Println("fluentd-adapter: reconnected")
 
 		adapter.conn = conn
 		return nil
