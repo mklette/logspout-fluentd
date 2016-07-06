@@ -58,13 +58,13 @@ func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 			label := strings.Replace(key, ".", "-", -1)
 			record["docker/label/"+label] = value
 		}
-		for key, value := range message.Container.Config.Env {
-			// add additional  mesos/chronos information
-			label := strings.Replace(key, ".", "-", -1)
-			if strings.Contains(label, "MESOS_TASK_ID") ||  strings.Contains(label, "mesos_task_id") {
-				record["docker/env/"+label] = value
+		// use MESOS_TASK_ID for mesos/chronos containers
+		for _, kv := range message.container.Config.Env {
+			kvp := strings.SplitN(kv, "=", 2)
+			if len(kvp) == 2 && strings.Contains(kvp[0], "MESOS_TASK_ID") ||  strings.Contains(kvp[0], "mesos_task_id") {
+				record["docker/name"] = kvp[1]
 			}
-		}
+	        }
 		data := []interface{}{tag, timestamp, record}
 
 		json, err := json.Marshal(data)
