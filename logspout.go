@@ -49,13 +49,21 @@ func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 
 		record := make(map[string]string)
 		record["message"] = message.Data
-		record["docker/hostname"] = message.Container.Config.Hostname
+		record["host"] = message.Container.Config.Hostname
+		record["ident"] = "docker-container-log"
 		record["docker/id"] = message.Container.ID
 		record["docker/image"] = message.Container.Config.Image
 		record["docker/name"] = message.Container.Name
 		for key, value := range message.Container.Config.Labels {
 			label := strings.Replace(key, ".", "-", -1)
 			record["docker/label/"+label] = value
+		}
+		for key, value := range message.Container.Config.Env {
+			// add additional  mesos/chronos information
+			if strings.Contains(label, "MESOS_TASK_ID") ||  strings.Contains(label, "mesos_task_id") {
+				label := strings.Replace(key, ".", "-", -1)
+				record["docker/env/"+label] = value
+			}
 		}
 		data := []interface{}{tag, timestamp, record}
 
