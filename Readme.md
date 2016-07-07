@@ -30,7 +30,7 @@ Configure Logspout to receive forwarded messages, something like this:
 ```
 git clone https://github.com/gliderlabs/logspout
 # add into modules.go:
-_ "github.com/jangaraj/logspout-fluentd"
+_ "github.com/Trufa-me/logspout-fluentd"
 docker build --rm -t mycustomlogspout .
 docker run \
   --name=mycustomlogspout \
