@@ -54,10 +54,12 @@ func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 		record["docker/id"] = message.Container.ID
 		record["docker/image"] = message.Container.Config.Image
 		record["docker/name"] = message.Container.Name
+		/*
 		for key, value := range message.Container.Config.Labels {
 			label := strings.Replace(key, ".", "-", -1)
 			record["docker/label/"+label] = value
 		}
+		*/
 		// use MESOS_TASK_ID for mesos/chronos containers
 		for _, kv := range message.Container.Config.Env {
 			kvp := strings.SplitN(kv, "=", 2)
