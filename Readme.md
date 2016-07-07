@@ -1,6 +1,11 @@
 # logspout-fluentd
 
-Logspout module for forwarding logs to fluentd.
+Logspout module for forwarding Docker logs to fluentd. Custom Docker log fiels: 
+
+- ident: docker-container-log 
+- docker/image
+- docker/id
+- docker/name (or env variable MESOS_TASK_ID/mesos_task_id for mesos/chronos/marathon containers)
 
 ## Usage
 
@@ -27,5 +32,10 @@ git clone https://github.com/gliderlabs/logspout
 # add into modules.go:
 _ "github.com/jangaraj/logspout-fluentd"
 docker build --rm -t mycustomlogspout .
-docker run --name="mycustomlogspout" --hostname=myhostname -d -v /var/run/docker.sock:/var/run/docker.sock mycustomlogspout fluentd://<fluentd_ip>:24284
+docker run \
+  --name=mycustomlogspout \
+  --hostname=myhostname -d \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  mycustomlogspout \
+  fluentd://<fluentd_ip>:24284
 ```
