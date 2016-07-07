@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 	"time"
+	"os"
 
 	"github.com/gliderlabs/logspout/router"
 )
@@ -46,10 +47,11 @@ func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 	for message := range logstream {
 		timestamp := int32(time.Now().Unix())
 		tag := "docker/" + message.Container.Config.Hostname
+		hname, _ := os.Hostname()
 
 		record := make(map[string]string)
 		record["message"] = message.Data
-		record["host"] = message.Container.Config.Hostname
+		record["host"] = hname
 		record["ident"] = "docker-container-log"
 		record["docker/id"] = message.Container.ID
 		record["docker/image"] = message.Container.Config.Image
