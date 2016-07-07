@@ -19,3 +19,13 @@ Configure Logspout to receive forwarded messages, something like this:
   # Handle messages here.
 </match>
 ```
+
+## Compilation
+
+```
+git clone https://github.com/gliderlabs/logspout
+# add into modules.go:
+_ "github.com/jangaraj/logspout-fluentd"
+docker build --rm -t mycustomlogspout .
+docker run --name="mycustomlogspout" --hostname=myhostname -d -v /var/run/docker.sock:/var/run/docker.sock mycustomlogspout fluentd://<fluentd_ip>:24284
+```
