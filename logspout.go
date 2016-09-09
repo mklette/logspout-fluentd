@@ -19,6 +19,21 @@ type FluentdAdapter struct {
 	transport router.AdapterTransport
 }
 
+type Record struct {
+	Message string `json:"message"`
+	Host string `json:"host"`
+	Docker Docker `json:"docker"`
+}
+
+type Docker struct {
+	Id string `json:"id"`
+	Image string `json:"image"`
+	Name string `json:"name"`
+	Status string `json:"status"`
+	Command string `json:"command"`
+	Labels map[string]string `json:"labels"`
+}
+
 func init() {
 	router.AdapterFactories.Register(NewFluentdAdapter, "fluentd")
 }
@@ -46,29 +61,27 @@ func NewFluentdAdapter(route *router.Route) (router.LogAdapter, error) {
 func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 	for message := range logstream {
 		timestamp := int32(time.Now().Unix())
-		tag := "docker/" + message.Container.Config.Hostname
+		tag := "docker." + message.Container.Config.Hostname
 		hname, _ := os.Hostname()
 
-		record := make(map[string]string)
-		record["message"] = message.Data
-		record["host"] = hname
-		record["ident"] = "docker-container-log"
-		record["docker/id"] = message.Container.ID
-		record["docker/image"] = message.Container.Config.Image
-		record["docker/name"] = message.Container.Name
-		/*
+		record := Record{}
+		record.Message = message.Data
+		record.Host = hname
+		record.Docker = Docker{}
+		record.Docker.Id = message.Container.ID
+		record.Docker.Image = message.Container.Config.Image
+		record.Docker.Name = message.Container.Name
+		record.Docker.Status = message.Container.State.String()
+		record.Docker.Command = strings.Join(message.Container.Config.Cmd, " ")
+
+		record.Docker.Labels = make(map[string]string)
+
+
 		for key, value := range message.Container.Config.Labels {
 			label := strings.Replace(key, ".", "-", -1)
-			record["docker/label/"+label] = value
+			record.Docker.Labels[label] = value
 		}
-		*/
-		// use MESOS_TASK_ID for mesos/chronos containers
-		for _, kv := range message.Container.Config.Env {
-			kvp := strings.SplitN(kv, "=", 2)
-			if len(kvp) == 2 && strings.Contains(kvp[0], "MESOS_TASK_ID") ||  strings.Contains(kvp[0], "mesos_task_id") {
-				record["docker/name"] = kvp[1]
-			}
-	        }
+
 		data := []interface{}{tag, timestamp, record}
 
 		json, err := json.Marshal(data)
