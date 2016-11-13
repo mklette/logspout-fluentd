@@ -61,7 +61,11 @@ func NewFluentdAdapter(route *router.Route) (router.LogAdapter, error) {
 func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 	for message := range logstream {
 		timestamp := int32(time.Now().Unix())
-		tag := "docker." + message.Container.Config.Hostname
+		tagprefix := "docker"
+		if os.Getenv("FLUENTD_TAG_PREFIX") != "" {
+			tagprefix = os.Getenv("FLUENTD_TAG_PREFIX")
+		}
+		tag := tagprefix + "." + message.Container.Config.Hostname
 		hname, _ := os.Hostname()
 
 		record := Record{}
