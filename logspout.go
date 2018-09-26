@@ -8,8 +8,10 @@ import (
 	"strings"
 	"time"
 	"os"
+	"regexp"
 
 	"github.com/gliderlabs/logspout/router"
+	"github.com/mklette/flatten"
 )
 
 // FluentdAdapter is an adapter for streaming JSON to a fluentd collector.
@@ -68,8 +70,22 @@ func (adapter *FluentdAdapter) Stream(logstream chan *router.Message) {
 		tag := tagprefix + "." + message.Container.Config.Hostname
 		hname, _ := os.Hostname()
 
+		messageIsEmpty, err := regexp.MatchString("^[[:space:]]*$", message.Data)
+		if messageIsEmpty {
+			log.Println("Avoid adding empty message!")
+			continue
+		}
+
+		messageString, err := flatten.FlattenString(message.Data, "", flatten.UnderscoreStyle)
+		if err != nil {
+			log.Println("There was an error: ", err)
+			continue
+		} else {
+			log.Println("HA! successfully converted: %v => %v", message.Data, messageString)
+		}
+
 		record := Record{}
-		record.Message = message.Data
+		record.Message = messageString
 		record.Host = hname
 		record.Docker = Docker{}
 		record.Docker.Id = message.Container.ID
